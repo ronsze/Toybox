@@ -1,6 +1,5 @@
-package kr.sdbk.toybox.ui.theme
+package kr.sdbk.common.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
