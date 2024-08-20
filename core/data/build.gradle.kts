@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "kr.sdbk.data"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
