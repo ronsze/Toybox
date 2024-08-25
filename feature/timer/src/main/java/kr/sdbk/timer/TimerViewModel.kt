@@ -9,9 +9,12 @@ class TimerViewModel: BaseViewModel() {
     private val _progressedTime: MutableStateFlow<Long> = MutableStateFlow(0)
     val progressedTime get() = _progressedTime
 
+    private val _isPlaying: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val isPlaying get() = _isPlaying
+
     private val timerListener = object: SimpleTimer.SimpleTimerListener {
-        override fun onStart() {}
-        override fun onDone() {}
+        override fun onStart() { _isPlaying.set(true) }
+        override fun onDone() { _isPlaying.set(false) }
         override fun onTimeProgressed(progressedTime: Long) {
             _progressedTime.set(progressedTime)
         }

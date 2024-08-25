@@ -1,53 +1,83 @@
 package kr.sdbk.timer
 
-import android.annotation.SuppressLint
-import android.util.Log
+import android.widget.NumberPicker
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kr.sdbk.common.ui.composables.BaseText
 import kr.sdbk.common.ui.theme.Orange
 import kr.sdbk.common.ui.theme.RightGrey
+import kotlin.math.ceil
 
 @Composable
 fun TimerView(
-    popupBackStack: () -> Unit,
     viewModel: TimerViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxSize()
     ) {
-        val progressedTime by viewModel.progressedTime.collectAsStateWithLifecycle()
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Spacer(modifier = Modifier.weight(0.5f))
+            val progressedTime by viewModel.progressedTime.collectAsStateWithLifecycle()
+            val min = remember { mutableStateOf(0) }
+            val sec = remember { mutableStateOf(0) }
 
-        Clock(totalTime = viewModel.timer.totalTime, progressedTime = progressedTime, viewModel = viewModel)
-        TimeInput()
+            Clock(
+                totalTime = viewModel.timer.totalTime,
+                progressedTime = progressedTime,
+                onClickTimer = {
+                    if (viewModel.timer.isStarted) {
+                        if (viewModel.timer.isPaused) viewModel.timer.resume()
+                        else viewModel.timer.pause()
+                    } else {
+                        viewModel.timer.startTimer(((min.value * 60) + sec.value) * 1000L )
+                    }
+                }
+            )
+
+            val isPlaying by viewModel.isPlaying.collectAsStateWithLifecycle()
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                if (!isPlaying) {
+                    TimePicker(
+                        min = min,
+                        sec = sec
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -55,30 +85,28 @@ fun TimerView(
 private fun Clock(
     totalTime: Long,
     progressedTime: Long,
-    viewModel: TimerViewModel
+    onClickTimer: () -> Unit
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.clickable { viewModel.timer.startTimer(600000) }
+        modifier = Modifier.clickable { onClickTimer() }
     ) {
         ProgressCircle(totalTime = totalTime, progressedTime = progressedTime)
         TimeText(totalTime = totalTime, progressedTime = progressedTime)
     }
 }
 
-@SuppressLint("DefaultLocale")
 @Composable
 private fun TimeText(
     totalTime: Long,
     progressedTime: Long
 ) {
     val lessTime = (totalTime - progressedTime)
-    val timeSec = lessTime / 1000
-    val hour = timeSec / 60
+    val timeSec = if (lessTime <= 0) 0 else ceil(lessTime / 1000f).toInt()
+    val min = timeSec / 60
     val sec = timeSec % 60
-    val locale = Locale.current
     BaseText(
-        text = "${String.format("%02d", hour, locale)}:${String.format("%02d", sec, locale)}",
+        text = "${String.format("%02d", min)}:${String.format("%02d", sec)}",
         fontSize = 75.sp,
         fontWeight = FontWeight.Bold
     )
@@ -110,7 +138,6 @@ private fun ProgressCircle(
         )
 
         val sweepAngle = if (progressedTime == 0L) 0f else 360f * (progressedTime / totalTime.toFloat())
-        Log.e("qweqwe", "${sweepAngle}")
         drawArc(
             color = Orange,
             startAngle = -90f,
@@ -123,12 +150,42 @@ private fun ProgressCircle(
 }
 
 @Composable
-private fun TimeInput() {
+private fun TimePicker(
+    min: MutableState<Int>,
+    sec: MutableState<Int>
+) {
+    AndroidView(factory = {
+        NumberPicker(it).apply {
+            value = min.value
+            minValue = 0
+            maxValue = 59
+            displayedValues = (minValue .. maxValue).map { String.format("%02d", it) }.toTypedArray()
+            setOnValueChangedListener { numberPicker, i, i2 -> min.value = i2 }
+        }
+    }, update = {
+        it.value = min.value
+    })
+    Spacer(modifier = Modifier.width(25.dp))
 
+    AndroidView(factory = {
+        NumberPicker(it).apply {
+            value = min.value
+            minValue = 0
+            maxValue = 59
+            displayedValues = (minValue .. maxValue).map { String.format("%02d", it) }.toTypedArray()
+            setOnValueChangedListener { numberPicker, ov, nv ->
+                sec.value = nv
+                if (ov == maxValue && nv == minValue) min.value++
+                else if (ov == minValue && nv == maxValue) min.value--
+            }
+        }
+    }, update = {
+        it.value = sec.value
+    })
 }
 
 @Composable
 @Preview
 private fun Preview() {
-    TimerView(popupBackStack = {})
+    TimerView()
 }

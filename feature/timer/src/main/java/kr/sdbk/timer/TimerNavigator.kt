@@ -8,7 +8,7 @@ fun NavGraphBuilder.timerGraph(
     mainNavController: NavController
 ) {
     composable(Destination.Timer.route) {
-        TimerView(popupBackStack = mainNavController::popBackStack)
+        TimerView()
     }
 }
 

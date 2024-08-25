@@ -19,7 +19,10 @@ class SimpleTimer(
 
     private var timerJob: Job? = null
 
-    private var isStarted: Boolean = false
+    var isStarted: Boolean = false
+        private set
+    var isPaused: Boolean = false
+        private set
 
     fun startTimer(time: Long) {
         totalTime = time
@@ -34,19 +37,22 @@ class SimpleTimer(
             }
             listener?.onDone()
             timerJob = null
+            stop()
         }
     }
 
     fun pause() {
-        isStarted = false
+        isPaused = true
         timerJob?.cancel()
     }
 
     fun resume() {
-        timerJob?.start()
+        isPaused = false
+        startTimer(totalTime)
     }
 
     fun stop() {
+        isPaused = false
         isStarted = false
         totalTime = 0
         progressedTime = 0
