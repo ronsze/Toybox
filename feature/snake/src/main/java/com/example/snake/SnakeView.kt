@@ -4,7 +4,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,13 +19,9 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -64,7 +62,7 @@ private fun Score(
 
 @Composable
 private fun GameBoard(
-    board: List<List<Int>>
+    board: List<List<SnakeViewModel.CellType>>
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(SnakeViewModel.ARRAY_SIZE),
@@ -78,15 +76,14 @@ private fun GameBoard(
 
 @Composable
 private fun BoardBlock(
-    value: Int
+    value: SnakeViewModel.CellType
 ) {
     val color = when (value) {
-        SnakeViewModel.BLANK -> Color.White
-        SnakeViewModel.BLOCK -> Color.LightGray
-        SnakeViewModel.HEAD -> Color.Red
-        SnakeViewModel.BODY -> Color.Yellow
-        SnakeViewModel.BONUS -> Color.Blue
-        else -> Color.DarkGray
+        SnakeViewModel.CellType.BLANK -> Color.White
+        SnakeViewModel.CellType.BLOCK -> Color.LightGray
+        SnakeViewModel.CellType.HEAD -> Color.Red
+        SnakeViewModel.CellType.BODY -> Color.Yellow
+        SnakeViewModel.CellType.BONUS -> Color.Blue
     }
 
     Canvas(
@@ -106,36 +103,31 @@ private fun Keypad(
         modifier = Modifier
             .size(300.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .align(Alignment.TopCenter)
-                .clickable { viewModel.currentDirection = SnakeViewModel.TOP }
-                .background(Color.LightGray)
-        )
-
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .align(Alignment.CenterStart)
-                .clickable { viewModel.currentDirection = SnakeViewModel.LEFT }
-                .background(Color.LightGray)
-        )
-
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .align(Alignment.CenterEnd)
-                .clickable { viewModel.currentDirection = SnakeViewModel.RIGHT }
-                .background(Color.LightGray)
-        )
-
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .align(Alignment.BottomCenter)
-                .clickable { viewModel.currentDirection = SnakeViewModel.BOTTOM }
-                .background(Color.LightGray)
-        )
+        val onClickButton = viewModel::setDirection
+        KeypadButton(SnakeViewModel.Directions.TOP, onClickButton)
+        KeypadButton(SnakeViewModel.Directions.LEFT, onClickButton)
+        KeypadButton(SnakeViewModel.Directions.RIGHT, onClickButton)
+        KeypadButton(SnakeViewModel.Directions.BOTTOM, onClickButton)
     }
+}
+
+@Composable
+private fun BoxScope.KeypadButton(
+    direction: SnakeViewModel.Directions,
+    onClickButton: (SnakeViewModel.Directions) -> Unit
+) {
+    val align = when (direction) {
+        SnakeViewModel.Directions.TOP -> Alignment.TopCenter
+        SnakeViewModel.Directions.LEFT -> Alignment.CenterStart
+        SnakeViewModel.Directions.RIGHT -> Alignment.CenterEnd
+        SnakeViewModel.Directions.BOTTOM -> Alignment.BottomCenter
+    }
+
+    Box(
+        modifier = Modifier
+            .size(100.dp)
+            .align(align)
+            .clickable { onClickButton(direction) }
+            .background(Color.LightGray)
+    )
 }
