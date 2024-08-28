@@ -24,4 +24,5 @@ dependencies {
 
     implementation(project(":feature:timer"))
     implementation(project(":feature:weather"))
+    implementation(project(":feature:snake"))
 }
