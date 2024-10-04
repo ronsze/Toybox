@@ -19,9 +19,9 @@ android {
 apply(from = "$rootDir/feature-common.gradle")
 
 dependencies {
-    implementation(project(":core:data"))
-    implementation(project(":core:domain"))
+    implementation(projects.core.data)
+    implementation(projects.core.common)
 
-    implementation(project(":feature:timer"))
-    implementation(project(":feature:weather"))
+    implementation(projects.feature.timer)
+    implementation(projects.feature.weather)
 }
