@@ -46,9 +46,9 @@ private fun FeatureItem(
     Image(
         painter = painterResource(id = feature.icon),
         contentDescription = "",
-        contentScale = ContentScale.Crop,
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(1f)
+            .padding(10.dp)
     )
 }

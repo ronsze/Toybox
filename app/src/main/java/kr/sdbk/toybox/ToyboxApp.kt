@@ -34,6 +34,5 @@ sealed interface MainDestination {
 }
 
 enum class Features(@DrawableRes val icon: Int) {
-    TIMER(R.drawable.ic_launcher_background),
-    WEATHER(R.drawable.ic_launcher_foreground)
+    TIMER(R.drawable.ic_timer)
 }
