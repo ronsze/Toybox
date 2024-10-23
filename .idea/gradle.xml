@@ -17,6 +17,7 @@
             <option value="$PROJECT_DIR$/feature" />
             <option value="$PROJECT_DIR$/feature/timer" />
             <option value="$PROJECT_DIR$/feature/weather" />
+            <option value="$PROJECT_DIR$/feature/wheel-menu" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

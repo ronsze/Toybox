@@ -24,4 +24,5 @@ dependencies {
 
     implementation(projects.feature.timer)
     implementation(projects.feature.weather)
+    implementation(projects.feature.wheelMenu)
 }
