@@ -34,7 +34,6 @@ class SnakeViewModel: BaseViewModel() {
         val initList = List(ARRAY_SIZE) { i ->
             List(ARRAY_SIZE) { j ->
                 if (i == 0 || j == 0 || i == ARRAY_SIZE - 1 || j == ARRAY_SIZE - 1) {
-                    Log.e("qweqwe", "${i * j}")
                     CellType.BLOCK
                 } else CellType.BLANK
             }.toMutableStateList()
