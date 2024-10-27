@@ -1,6 +1,5 @@
 package kr.sdbk.wheel_menu
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
@@ -22,9 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInParent
-import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toOffset
@@ -33,75 +29,71 @@ import kr.sdbk.common.functions.pxToDp
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 @Composable
 fun WheelMenuView(
     viewModel: WheelMenuViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    var rotate by remember { mutableStateOf(0f) }
-    var center by remember { mutableStateOf(Offset(0f, 0f)) }
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .fillMaxSize()
-            .onGloballyPositioned {
-                center = Offset(
-                    it.positionInWindow().x + it.size.width / 2,
-                    it.positionInWindow().y + it.size.height / 2
-                )
-            }
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDrag = { change, _ ->
-                        change.consume()
-                        val angle = getAngleAmount(center, change.previousPosition, change.position)
-                        rotate += angle
-                    }
-                )
-            }
-    ) {
-        Menu(
-            rotate = rotate,
-            modifier = Modifier
-        )
-    }
-}
-
-@Composable
-private fun Menu(
-    rotate: Float,
-    modifier: Modifier
-) {
     val items by remember {
         mutableStateOf(
             listOf(Color.Blue, Color.Red, Color.Yellow, Color.Green, Color.White, Color.Black)
         )
     }
+
+    var rotate by remember { mutableStateOf(0f) }
     var center by remember { mutableStateOf(Offset(0f, 0f)) }
     var initialOffset by remember { mutableStateOf(Offset(0f, 0f)) }
+    var selectedIndex by remember { mutableStateOf(0) }
+
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .background(Color.LightGray)
-            .onGloballyPositioned {
-                center = it.size.center.toOffset()
-                initialOffset = Offset(center.x, center.y * 0.3f)
-            }
-            .graphicsLayer {
-                rotationZ = rotate
-            }
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxSize()
     ) {
-        items.forEachIndexed { i, v ->
-            MenuItem(
-                initialOffset = initialOffset,
-                center = center,
-                index = i,
-                item = v,
-                totalCount = items.size,
-                modifier = Modifier
-            )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .background(Color.LightGray)
+                .onGloballyPositioned {
+                    center = it.size.center.toOffset()
+                    initialOffset = Offset(center.x, center.y * 0.3f)
+                }
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDrag = { change, _ ->
+                            change.consume()
+                            val angle = getAngleAmount(center, change.previousPosition, change.position)
+                            rotate += angle
+                        },
+                        onDragEnd = {
+                            val value: Float = rotate / 60
+                            val closest: Float = when {
+                                rotate < 0 -> -value
+                                rotate > 0 -> abs(value - items.size)
+                                else -> 0f
+                            }
+                            selectedIndex = closest.roundToInt()
+                            rotate = -(selectedIndex * 60f)
+                        }
+                    )
+                }
+                .graphicsLayer {
+                    rotationZ = rotate
+                }
+        ) {
+            items.forEachIndexed { i, v ->
+                MenuItem(
+                    initialOffset = initialOffset,
+                    center = center,
+                    index = i,
+                    item = v,
+                    totalCount = items.size,
+                    modifier = Modifier
+                )
+            }
         }
     }
 }
@@ -125,7 +117,7 @@ private fun MenuItem(
         rotatedOffset.x - dpToPx(dp = (size / 2)),
         rotatedOffset.y - dpToPx(dp = (size / 2))
     )
-    Log.e("qweqwe", "${offset.x}, ${offset.y}")
+
     Box(
         modifier = modifier
             .size(size)
@@ -137,16 +129,16 @@ private fun MenuItem(
     )
 }
 
-fun rotatePoint(input: Offset, center: Offset, angleDegrees: Double): Offset {
+private fun rotatePoint(input: Offset, center: Offset, angleDegrees: Double): Offset {
     val angleRadians = Math.toRadians(angleDegrees)
 
-    val Bx = center.x + (input.x - center.x) * cos(angleRadians) - (input.y - center.y) * sin(angleRadians)
-    val By = center.y + (input.x - center.x) * sin(angleRadians) + (input.y - center.y) * cos(angleRadians)
+    val bx = center.x + (input.x - center.x) * cos(angleRadians) - (input.y - center.y) * sin(angleRadians)
+    val by = center.y + (input.x - center.x) * sin(angleRadians) + (input.y - center.y) * cos(angleRadians)
 
-    return Offset(Bx.toFloat(), By.toFloat())
+    return Offset(bx.toFloat(), by.toFloat())
 }
 
-fun getAngleAmount(center: Offset, previousPosition: Offset, currentPosition: Offset): Float {
+private fun getAngleAmount(center: Offset, previousPosition: Offset, currentPosition: Offset): Float {
     val previousVector = previousPosition - center
     val currentVector = currentPosition - center
 
