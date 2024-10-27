@@ -69,14 +69,15 @@ fun WheelMenuView(
                             rotate += angle
                         },
                         onDragEnd = {
-                            val value: Float = rotate / 60
+                            val angle = 360f / items.size
+                            val value: Float = rotate / angle
                             val closest: Float = when {
                                 rotate < 0 -> -value
                                 rotate > 0 -> abs(value - items.size)
                                 else -> 0f
                             }
                             selectedIndex = closest.roundToInt()
-                            rotate = -(selectedIndex * 60f)
+                            rotate = -(selectedIndex * angle)
                         }
                     )
                 }
